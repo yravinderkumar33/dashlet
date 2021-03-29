@@ -5,7 +5,9 @@
     "@angular/common": "^11.0.9",
     "@angular/core": "^11.0.9",
     "chart.js": "^2.9.4",
-    "ng2-charts": "^2.4.2"
+    "ng2-charts": "^2.4.2",
+    "rxjs": "~6.6.0",
+    "lodash-es": "^4.17.21"
   },
   "dependencies": {
     "tslib": "^2.0.0"
