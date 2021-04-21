@@ -4,6 +4,8 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import {DashletModule} from 'dashlet';
+import { DataTablesModule } from "angular-datatables";
+
 @NgModule({
   declarations: [
     AppComponent
@@ -11,7 +13,8 @@ import {DashletModule} from 'dashlet';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    DashletModule
+    DashletModule,
+    DataTablesModule
   ],
   providers: [],
   bootstrap: [AppComponent]

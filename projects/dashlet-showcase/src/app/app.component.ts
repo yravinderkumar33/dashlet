@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { IBigNumberConfig } from 'dashlet';
+import { data } from './data';
 
 @Component({
   selector: 'sb-root',
@@ -10,64 +12,55 @@ export class AppComponent {
 
   type = "line";
 
-  config = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+  config2 = {
+    labelExpr: 'District',
     datasets: [
-      { data: [65, 59, 80, 81, 56, 55, 40], label: 'Series A' },
-      { data: [28, 48, 40, 19, 86, 27, 90], label: 'Series B' },
-      { data: [180, 480, 770, 90, 1000, 270, 400], label: 'Series C', yAxisID: 'y-axis-1' }
+      { dataExpr: 'Total Plays', label: 'Total Plays' },
+      { dataExpr: 'Total Devices', label: 'Total Devices' },
+      { dataExpr: 'New Devices', label: 'New Devices' }
     ],
     options: {
-      responsive: true,
-      scales: {
-        // We use this empty structure as a placeholder for dynamic theming.
-        xAxes: [{}],
-        yAxes: [
-          {
-            id: 'y-axis-0',
-            position: 'left',
-          },
-          {
-            id: 'y-axis-1',
-            position: 'right',
-            gridLines: {
-              color: 'rgba(255,0,0,0.3)',
-            },
-            ticks: {
-              fontColor: 'red',
-            }
-          }
-        ]
-      },
-      annotation: {
-        annotations: [
-          {
-            type: 'line',
-            mode: 'vertical',
-            scaleID: 'x-axis-0',
-            value: 'March',
-            borderColor: 'orange',
-            borderWidth: 2,
-            label: {
-              enabled: true,
-              fontColor: 'orange',
-              content: 'LineAnno'
-            }
-          },
-        ],
-      },
+      title: {
+        text: `Device Metrics`,
+        display: true,
+        fontSize: 20
+      }
     }
   };
 
-  config2 = {
-    labelExpr: 'name',
-    datasets: [
-      { dataExpr: 'amount', label: 'Money' },
-    ]
+  data = {
+    values: data
   };
 
-  data = {
-    values: [{ name: "ravinder", amount: 10 }, { name: "ravinder", amount: 20 }, { name: "deepak", amount: 20 }, { name: "random_person", amount: 22 }]
+  dtOptions = {
+    data: data,
+    info: false,
+    columns: [{
+      title: 'Districts',
+      data: 'District'
+    },
+    {
+      title: 'Total Devices',
+      data: 'Total Devices'
+    }, {
+      title: 'New Devices',
+      data: 'New Devices'
+    }, {
+      title: 'Goal of Devices',
+      data: 'Goal of Devices'
+    },
+    {
+      title: 'Content Plays Goal',
+      data: 'Goal of content plays'
+    }]
   };
+
+
+  bigNumberConfig: IBigNumberConfig = {
+    header: 'Total Device Count',
+    footer: 'Uttar Pradesh',
+    dataExpr: 'Total Devices'
+  }
+
   constructor() { }
 }

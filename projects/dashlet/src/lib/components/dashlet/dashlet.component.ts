@@ -1,9 +1,9 @@
 import { Component, ComponentFactoryResolver, Input, OnInit, ViewChild } from '@angular/core';
 import { ReportWrapperDirective } from '../../directives';
+import { IBase } from '../../types';
+import TYPE_TO_COMPONENT_MAPPING from './type_to_component_mapping';
 
-import { ChartJsComponent } from '../chart-js/chart-js.component';
-
-
+type componentInstanceType = Pick<IBase, "initialize">;
 @Component({
   selector: 'sb-dashlet',
   templateUrl: './dashlet.component.html',
@@ -14,36 +14,40 @@ export class DashletComponent implements OnInit {
   @Input() type: string;
   @Input() config: object;
   @Input() data: object;
-
   @Input() width = '100%';
   @Input() height = '100%';
 
+  @ViewChild(ReportWrapperDirective, { static: true }) reportWrapper: ReportWrapperDirective;
+  private readonly _typeToComponentMapping = Object.freeze(TYPE_TO_COMPONENT_MAPPING);
+
+  private _componentInstance;
+  get component() {
+    return this._componentInstance;
+  }
+  set component(componentInstance) {
+    this._componentInstance = componentInstance;
+  }
+
   constructor(private componentFactoryResolver: ComponentFactoryResolver) { }
 
-  private readonly _typeToComponentMapping = Object.freeze({
-    'line': ChartJsComponent,
-    'pie': ChartJsComponent,
-    'bar': ChartJsComponent
-  });
-
-  @ViewChild(ReportWrapperDirective, { static: true }) reportWrapper: ReportWrapperDirective;
-
   ngOnInit(): void {
-    if (!this.type || !this.config) {
-      throw new Error('Syntax Error');
+    if (!this.type && !this.config && !this.data) {
+      throw new SyntaxError('Syntax Error. Please check configuration');
     }
-    this.loadComponent(this.type);
+    this.loadComponent(this.type).catch(err => {
+      console.error(err);
+      throw err;
+    });
   }
 
-  loadComponent(type) {
-    const component = this._typeToComponentMapping[type];
-    if (!component) {
-      throw new Error('type not supported');
-    }
+  async loadComponent(type: string) {
+    const componentResolver = this._typeToComponentMapping[type];
+    if (!componentResolver) { throw new Error('Given Type not supported'); }
+    const component = await componentResolver();
     this.reportWrapper.viewContainerRef.clear();
-    const componentFactory = this.componentFactoryResolver.resolveComponentFactory<{ initialize(config) }>(component);
+    const componentFactory = this.componentFactoryResolver.resolveComponentFactory<componentInstanceType>(component);
     const componentRef = this.reportWrapper.viewContainerRef.createComponent(componentFactory);
+    this.component = componentRef.instance;
     componentRef.instance.initialize({ config: this.config, type: this.type, data: this.data });
   }
-
 }
