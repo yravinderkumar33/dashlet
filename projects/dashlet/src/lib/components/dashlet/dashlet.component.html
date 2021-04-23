@@ -1,5 +1,6 @@
-<div [ngStyle]="{'width.px': width, 'height.px': height}">
-    <ng-container></ng-container>
+<!-- <div [ngStyle]="{'width.px': width, 'height.px': height}"> -->
+<div>
+    <ng-container *ngIf="headerTemplate" [ngTemplateOutlet]="headerTemplate"></ng-container>
     <ng-template sbReportWrapper></ng-template>
-    <ng-container></ng-container>
+    <ng-container *ngIf="footerTemplate" [ngTemplateOutlet]="footerTemplate"></ng-container>
 </div>

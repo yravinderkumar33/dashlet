@@ -11,6 +11,8 @@ export type InputParams = {
   data: IData
 }
 
+export type UpdateInputParams = Omit<InputParams, "data"> & { data: object[] };
+
 export enum ReportState {
   PENDING = "pending",
   DONE = "done"
@@ -27,7 +29,7 @@ export interface IBase {
   initialize(config: InputParams): void;
   reset(): void;
   destroy(): void;
-  update(input: InputParams);
+  update(input: UpdateInputParams);
   fetchData(config: IData);
 }
 

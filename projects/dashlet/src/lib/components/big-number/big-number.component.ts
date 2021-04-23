@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { DataService } from '../../services';
-import { IData, IReportType, InputParams, IBigNumberConfig, IBigNumber, ChartType } from '../../types';
+import { IData, IReportType, InputParams, IBigNumberConfig, IBigNumber, ChartType, UpdateInputParams } from '../../types';
 import { BaseComponent } from '../base/base.component';
 import { DEFAULT_CONFIG as DEFAULT_CONFIG_TOKEN } from '../../tokens';
 import { round, sumBy, toNumber } from 'lodash-es'
@@ -69,7 +69,7 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
     throw new Error('Method not implemented.');
   }
 
-  update(input: InputParams) {
+  update(input: UpdateInputParams) {
     if (!this._isInitialized) throw new Error('Chart is not initialized');
     if (!input) throw new Error('Missing input');
     const { config, data } = input;

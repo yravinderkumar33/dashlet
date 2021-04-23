@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Inject, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DataService } from '../../services';
 import { BaseChartDirective } from 'ng2-charts';
 import { IData, InputParams, IReportType, IDataset, IChart } from '../../types';
 import { BaseComponent } from '../base/base.component';
-import { IChartOptions, ChartType } from '../../types';
-import { get, groupBy, mapValues, sumBy } from 'lodash-es';
-import { DEFAULT_CONFIG } from '../../tokens';
+import { IChartOptions, ChartType, UpdateInputParams } from '../../types';
+import { get, groupBy, mapValues, sumBy, remove } from 'lodash-es';
+import { DEFAULT_CONFIG, DASHLET_CONSTANTS } from '../../tokens';
 import defaultConfiguration from './defaultConfiguration'
 @Component({
   selector: 'sb-chart-js',
@@ -32,56 +32,89 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
   public chartData: Partial<IChartOptions> = {};
   _labelsAndDatasetsClosure: any;
 
-  constructor(protected dataService: DataService, @Inject(DEFAULT_CONFIG) defaultConfig: object) {
+  constructor(protected dataService: DataService, @Inject(DEFAULT_CONFIG) defaultConfig: object, @Inject(DASHLET_CONSTANTS) private CONSTANTS: { [key: string]: string }) {
     super(dataService);
     this._defaultConfig = defaultConfig;
   }
   chartClick: EventEmitter<any>;
   chartHover: EventEmitter<any>;
 
+  /**
+   * @description initializes the component with the passed config and data
+   * @param {InputParams} { config, type, data }
+   * @return {*}  {Promise<any>}
+   * @memberof ChartJsComponent
+   */
   async initialize({ config, type, data }: InputParams): Promise<any> {
-    if (!(config && type && data)) throw new SyntaxError('Missing Configuration');
+    if (!(config && type && data)) throw new SyntaxError(this.CONSTANTS.INVALID_INPUT);
     this.config = config = { ...config, type };
     const fetchedJSON = await this.fetchData(data).toPromise().catch(err => []);
     this.chartBuilder(config, fetchedJSON);
     this._isInitialized = true;
   }
 
-  private getLabelsAndDatasetsClosure(labelExpr: string) {
+  /**
+   * @description It's a high order function responsible for getting labels and datasets, addition and removal of data.
+   * @private
+   * @param {string} labelExpr
+   * @param {IDataset[]} datasets
+   * @return {*}
+   * @memberof ChartJsComponent
+   */
+  private getLabelsAndDatasetsClosure(labelExpr: string, datasets: IDataset[]) {
     return (data: object[]) => {
-      const groupedDataBasedOnLabelExpr = groupBy(data, val => {
+      const getDataGroupedByLabelExpr = data => groupBy(data, val => {
         const value = get(val, labelExpr);
         return value && typeof value === 'string' ? value.toLowerCase().trim() : '';
       });
-      return {
-        getLabels: () => Object.keys(groupedDataBasedOnLabelExpr),
-        getDatasets: (datasets: IDataset[]) => {
-          return datasets.map(dataset => {
-            return {
-              ...dataset,
-              ...(dataset.dataExpr && {
-                data: Object.values(mapValues(groupedDataBasedOnLabelExpr, rows => sumBy(rows, row => +(row[dataset.dataExpr] || 0))))
-              })
-            }
+      const getLabels = (data: object) => Object.keys(data);
+      const getDatasets = (data: object) => datasets.map(dataset => {
+        return {
+          ...dataset,
+          ...(dataset.dataExpr && {
+            data: Object.values(mapValues(data, rows => sumBy(rows, row => +(row[dataset.dataExpr] || 0))))
           })
+        }
+      });
+      const findDataByLabelPredicate = (label: string) => (row: object) => row[labelExpr] === label;
+      return {
+        addData(newData: object[]) {
+          data = data.concat(newData);
+          return this.getData(data);
+        },
+        getData(updatedData?: object[]) {
+          const groupedData = getDataGroupedByLabelExpr(updatedData || data);
+          return {
+            labels: getLabels(groupedData),
+            datasets: getDatasets(groupedData)
+          }
+        },
+        removeData(label: string) {
+          remove(data, findDataByLabelPredicate(label));
+          return this.getData(data);
         }
       }
     }
   }
 
-
+  /**
+   * @description prepared the chart data using the configuration passed
+   * @param {Partial<IChartOptions>} config
+   * @param {*} data
+   * @memberof ChartJsComponent
+   */
   chartBuilder(config: Partial<IChartOptions>, data) {
     let { labels = [], labelExpr = null, type = null, legend = true, colors = [], datasets = [], options = {}, ...others } = config;
     options = { ...others, ...options };
     if (labelExpr) {
-      this._labelsAndDatasetsClosure = this.getLabelsAndDatasetsClosure(labelExpr)
-      const { getLabels, getDatasets } = this._labelsAndDatasetsClosure(data);
-      labels = getLabels(); datasets = getDatasets(datasets);
+      this._labelsAndDatasetsClosure = this.getLabelsAndDatasetsClosure(labelExpr, datasets)(data);
+      const { getData } = this._labelsAndDatasetsClosure;
+      ({ labels, datasets } = getData());
     }
     this.setChartData({ labels, datasets, options, type, legend, colors });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   private setChartData(config: Partial<IChartOptions>) {
     this.chartData = { ...this._defaultConfig, ...this.chartData, ...config };
@@ -104,51 +137,61 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
    * @param {InputParams} input
    * @memberof ChartJsComponent
    */
-  update(input: InputParams) {
-    if (!this._isInitialized) this.chartNotInitialized();
-    if (!input) throw new Error('Provide valid input');
+  update(input: UpdateInputParams) {
+    this.checkIfChartInitialized();
+    if (!input) throw new Error(this.CONSTANTS.INVALID_INPUT);
     const { type = null, config = {}, data = null } = input;
     let labels, datasets;
     if (data) {
-      const { getLabels, getDatasets } = this._labelsAndDatasetsClosure(data);
-      labels = getLabels(), datasets = getDatasets(this.config.datasets);
+      const labelExpr = get(config, 'labelExpr') || this.config.labelExpr, datasetsConfig = get(config, 'datasets') || this.config.datasets;
+      this._labelsAndDatasetsClosure = this.getLabelsAndDatasetsClosure(labelExpr, datasetsConfig)(data);
+      ({ labels, datasets } = this._labelsAndDatasetsClosure.getData(data));
     }
     this.setChartData({ ...config, ...(type && { type }), ...(labels && datasets && { labels, datasets }) });
     this.baseChartDirective.update();
   }
 
-  addData(data: object) {
-    if (!this._isInitialized) this.chartNotInitialized();
-    if (!data) throw new Error('provide valid object');
-    const { getLabels, getDatasets } = this._labelsAndDatasetsClosure([data]);
-    const labels = getLabels(), datasets = getDatasets(this.config.datasets);
-    //TODO re work required
+  addData(data: object[] | object) {
+    this.checkIfChartInitialized();
+    if (!data) throw new Error(this.CONSTANTS.INVALID_INPUT);
+    if (this._labelsAndDatasetsClosure) {
+      data = Array.isArray(data) ? data : [data];
+      const { labels, datasets } = this._labelsAndDatasetsClosure.addData(data);
+      this.setChartData({ labels, datasets });
+    }
   }
 
-  chartNotInitialized(): never {
-    throw Error('Chart is not initialized');
+  private checkIfChartInitialized(): never | void {
+    if (!this._isInitialized) {
+      throw Error(this.CONSTANTS.CHART_NOT_INITIALIZED);
+    }
   }
 
   refreshChart() {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
-  removeData();
-  removeData(label: string);
-  removeData(label?: any) {
-    throw new Error('Method not implemented.');
+  /**
+   * @description Removes data associated with a label
+   * @param {string} label
+   * @memberof ChartJsComponent
+   */
+  removeData(label: string) {
+    this.checkIfChartInitialized();
+    const { labels, datasets } = this._labelsAndDatasetsClosure.removeData(label);
+    this.setChartData({ labels, datasets });
   }
 
   getTelemetry() {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
   getCurrentSelection() {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
   getDatasetAtIndex(index: number) {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
 }

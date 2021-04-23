@@ -23,7 +23,6 @@ export interface IChart extends IChartBase {
 
   addData(data: object);
 
-  removeData();
   removeData(label: string);
 
   getTelemetry();
@@ -59,4 +58,5 @@ export type IDataset = {
   label: string;
   dataExpr?: string;
   data?: any[];
+  [key: string]: any;
 }

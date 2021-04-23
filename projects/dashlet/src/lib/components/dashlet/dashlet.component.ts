@@ -1,4 +1,4 @@
-import { Component, ComponentFactoryResolver, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, ComponentFactoryResolver, ContentChild, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { ReportWrapperDirective } from '../../directives';
 import { IBase } from '../../types';
 import TYPE_TO_COMPONENT_MAPPING from './type_to_component_mapping';
@@ -19,6 +19,8 @@ export class DashletComponent implements OnInit {
 
   @ViewChild(ReportWrapperDirective, { static: true }) reportWrapper: ReportWrapperDirective;
   private readonly _typeToComponentMapping = Object.freeze(TYPE_TO_COMPONENT_MAPPING);
+  @ContentChild('headerTemplate') headerTemplate: TemplateRef<any>;
+  @ContentChild('footerTemplate') footerTemplate: TemplateRef<any>;
 
   private _componentInstance;
   get component() {

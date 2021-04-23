@@ -12,6 +12,20 @@ export class AppComponent {
 
   type = "line";
 
+  config = {
+    labelExpr: 'District',
+    datasets: [
+      { dataExpr: 'Total Plays', label: 'Total Plays' }
+    ],
+    options: {
+      title: {
+        text: `Device Metrics`,
+        display: true,
+        fontSize: 20
+      }
+    }
+  };
+
   config2 = {
     labelExpr: 'District',
     datasets: [
@@ -60,6 +74,12 @@ export class AppComponent {
     header: 'Total Device Count',
     footer: 'Uttar Pradesh',
     dataExpr: 'Total Devices'
+  }
+
+  bigNumberConfig2: IBigNumberConfig = {
+    header: 'Total New Devices Count',
+    footer: 'Uttar Pradesh',
+    dataExpr: 'New Devices'
   }
 
   constructor() { }

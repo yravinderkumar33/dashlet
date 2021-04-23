@@ -1,7 +1,7 @@
 import { EventEmitter } from '@angular/core';
 import { DataService } from '../../services';
 import { Observable, of } from 'rxjs';
-import { InputParams, IBase, IData, ReportState, IReportType } from '../../types';
+import { InputParams, IBase, IData, ReportState, IReportType, UpdateInputParams } from '../../types';
 import { tap } from 'rxjs/operators';
 export abstract class BaseComponent implements Partial<IBase> {
 
@@ -20,7 +20,7 @@ export abstract class BaseComponent implements Partial<IBase> {
   abstract initialize(config: InputParams): Promise<any>
   abstract reset(): void;
   abstract destroy(): void;
-  abstract update(config: InputParams);
+  abstract update(config: UpdateInputParams);
   abstract addData(data: object);
 
   fetchData(config: IData): Observable<any[]> {
