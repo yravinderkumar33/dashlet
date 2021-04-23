@@ -74,3 +74,5 @@ export interface IFilterConfig {
   filters: IFilterConfig[];
   default?: string;
 }
+
+export type StringObject = { [key: string]: string };

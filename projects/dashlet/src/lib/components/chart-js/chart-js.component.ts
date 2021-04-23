@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Inject, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DataService } from '../../services';
 import { BaseChartDirective } from 'ng2-charts';
-import { IData, InputParams, IReportType, IDataset, IChart } from '../../types';
+import { IData, InputParams, IReportType, IDataset, IChart, StringObject } from '../../types';
 import { BaseComponent } from '../base/base.component';
 import { IChartOptions, ChartType, UpdateInputParams } from '../../types';
 import { get, groupBy, mapValues, sumBy, remove } from 'lodash-es';
@@ -32,7 +32,7 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
   public chartData: Partial<IChartOptions> = {};
   _labelsAndDatasetsClosure: any;
 
-  constructor(protected dataService: DataService, @Inject(DEFAULT_CONFIG) defaultConfig: object, @Inject(DASHLET_CONSTANTS) private CONSTANTS: { [key: string]: string }) {
+  constructor(protected dataService: DataService, @Inject(DEFAULT_CONFIG) defaultConfig: object, @Inject(DASHLET_CONSTANTS) private CONSTANTS: StringObject) {
     super(dataService);
     this._defaultConfig = defaultConfig;
   }
@@ -82,8 +82,9 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
           data = data.concat(newData);
           return this.getData(data);
         },
-        getData(updatedData?: object[]) {
-          const groupedData = getDataGroupedByLabelExpr(updatedData || data);
+        getData(overriddenData?: object[]) {
+          data = overriddenData || data;
+          const groupedData = getDataGroupedByLabelExpr(data);
           return {
             labels: getLabels(groupedData),
             datasets: getDatasets(groupedData)
@@ -137,14 +138,16 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
    * @param {InputParams} input
    * @memberof ChartJsComponent
    */
-  update(input: UpdateInputParams) {
+  update(input: Partial<UpdateInputParams>) {
     this.checkIfChartInitialized();
     if (!input) throw new Error(this.CONSTANTS.INVALID_INPUT);
     const { type = null, config = {}, data = null } = input;
     let labels, datasets;
     if (data) {
-      const labelExpr = get(config, 'labelExpr') || this.config.labelExpr, datasetsConfig = get(config, 'datasets') || this.config.datasets;
-      this._labelsAndDatasetsClosure = this.getLabelsAndDatasetsClosure(labelExpr, datasetsConfig)(data);
+      const { labelExpr, datasets: datasetsConfig } = config as { labelExpr: string, datasets: IDataset[] };
+      if (labelExpr || datasets) {
+        this._labelsAndDatasetsClosure = this.getLabelsAndDatasetsClosure(labelExpr || this.config.labelExpr, datasetsConfig || this.config.datasets)(data);
+      }
       ({ labels, datasets } = this._labelsAndDatasetsClosure.getData(data));
     }
     this.setChartData({ ...config, ...(type && { type }), ...(labels && datasets && { labels, datasets }) });

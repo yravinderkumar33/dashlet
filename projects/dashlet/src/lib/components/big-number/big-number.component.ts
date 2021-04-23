@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, Component, Inject, OnInit } from '@angular/core';
 import { DataService } from '../../services';
-import { IData, IReportType, InputParams, IBigNumberConfig, IBigNumber, ChartType, UpdateInputParams } from '../../types';
+import { IData, IReportType, InputParams, IBigNumberConfig, IBigNumber, ChartType, UpdateInputParams, StringObject } from '../../types';
 import { BaseComponent } from '../base/base.component';
-import { DEFAULT_CONFIG as DEFAULT_CONFIG_TOKEN } from '../../tokens';
+import { DEFAULT_CONFIG as DEFAULT_CONFIG_TOKEN, DASHLET_CONSTANTS } from '../../tokens';
 import { round, sumBy, toNumber } from 'lodash-es'
 @Component({
   selector: 'sb-big-number',
@@ -29,13 +29,15 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
   private _isInitialized: boolean = false;
   chart: IBigNumberConfig = {};
 
-  constructor(protected dataService: DataService, @Inject(DEFAULT_CONFIG_TOKEN) defaultConfig: IBigNumberConfig, private cdr: ChangeDetectorRef) {
+  private _bigNumberClosure: any;
+
+  constructor(protected dataService: DataService, @Inject(DEFAULT_CONFIG_TOKEN) defaultConfig: IBigNumberConfig, private cdr: ChangeDetectorRef, @Inject(DASHLET_CONSTANTS) private CONSTANTS: StringObject) {
     super(dataService);
     this._defaultConfig = defaultConfig;
   }
 
   async initialize({ config, data, type = "bigNumber" }: InputParams): Promise<any> {
-    if (!(config && data)) throw new SyntaxError('Missing Configuration');
+    if (!(config && data)) throw new SyntaxError(this.CONSTANTS.INVALID_INPUT);
     this.config = config = { ...config, type };
     const fetchedJSON = await this.fetchData(data).toPromise().catch(err => []);
     this.chartBuilder(config as IBigNumberConfig, fetchedJSON);
@@ -45,53 +47,74 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
   chartBuilder(config: IBigNumberConfig, JSONData) {
     const { header = this._defaultConfig.header, footer = this._defaultConfig.footer, dataExpr } = config;
     if (!dataExpr || !JSONData) {
-      throw Error('Missing data');
+      throw Error(this.CONSTANTS.INVALID_INPUT);
     }
-    const bigNumberObj = {
-      header, footer,
-      data: this.getSum(JSONData)(dataExpr)
-    }
+    this._bigNumberClosure = this.bigNumberDataClosure(dataExpr)(JSONData);
+    const bigNumberObj = { header, footer, data: this._bigNumberClosure.getData() }
     this.setBigNumberData(bigNumberObj);
   }
-
-  private getSum = data => key => (round(sumBy(data, val => toNumber(val[key])))).toLocaleString('hi-IN');
 
   private setBigNumberData(config: object) {
     this.chart = { ...this._defaultConfig, ...this.chart, ...config };
     this.cdr.detectChanges();
   }
 
+  private bigNumberDataClosure = (dataExpr: string) => (data: object[]) => {
+    const getSum = data => (round(sumBy(data, val => toNumber(val[dataExpr])))).toLocaleString('hi-IN');
+    return {
+      getData(overriddenData?: object[]) {
+        data = overriddenData || data;
+        return getSum(data)
+      },
+      addData(newData: object[]) {
+        data = data.concat(newData);
+        return this.getData();
+      }
+    }
+  }
+
   reset(): void {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
   destroy(): void {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
-  update(input: UpdateInputParams) {
+  update(input: Partial<Omit<UpdateInputParams, "type">>) {
     if (!this._isInitialized) throw new Error('Chart is not initialized');
-    if (!input) throw new Error('Missing input');
-    const { config, data } = input;
+    if (!input) throw new Error(this.CONSTANTS.INVALID_INPUT);
+    const { config = {}, data = null } = input;
     const { header, footer, dataExpr } = config as IBigNumberConfig;
+    let bigNumber;
+    if (data) {
+      this._bigNumberClosure = (dataExpr && this.bigNumberDataClosure(dataExpr)(data)) || this._bigNumberClosure;
+      bigNumber = this._bigNumberClosure.getData(data);
+    }
     this.setBigNumberData({
       ...(header && { header }),
       ...(footer && { footer }),
-      ...(dataExpr && data && {
-        data: this.getSum(data)(dataExpr)
+      ...(bigNumber && {
+        data: bigNumber
       })
     })
   }
 
-  addData(data: object) {
-    throw new Error('Method not implemented.');
+  addData(data: object | object[]) {
+    if (!data) throw new Error(this.CONSTANTS.INVALID_INPUT);
+    data = Array.isArray(data) ? data : [data];
+    const bigNumber = this._bigNumberClosure.addData(data);
+    this.setBigNumberData({
+      data: bigNumber
+    });
   }
 
   refreshChart() {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
+
   getTelemetry() {
-    throw new Error('Method not implemented.');
+    throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
   ngOnInit(): void {

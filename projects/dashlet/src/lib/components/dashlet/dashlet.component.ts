@@ -23,10 +23,10 @@ export class DashletComponent implements OnInit {
   @ContentChild('footerTemplate') footerTemplate: TemplateRef<any>;
 
   private _componentInstance;
-  get component() {
+  get instance() {
     return this._componentInstance;
   }
-  set component(componentInstance) {
+  set instance(componentInstance) {
     this._componentInstance = componentInstance;
   }
 
@@ -49,7 +49,7 @@ export class DashletComponent implements OnInit {
     this.reportWrapper.viewContainerRef.clear();
     const componentFactory = this.componentFactoryResolver.resolveComponentFactory<componentInstanceType>(component);
     const componentRef = this.reportWrapper.viewContainerRef.createComponent(componentFactory);
-    this.component = componentRef.instance;
+    this.instance = componentRef.instance;
     componentRef.instance.initialize({ config: this.config, type: this.type, data: this.data });
   }
 }
