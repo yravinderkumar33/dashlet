@@ -23,7 +23,8 @@ export class AppComponent {
         display: true,
         fontSize: 20
       }
-    }
+    },
+    legend: false
   };
 
   config2 = {
@@ -39,8 +40,7 @@ export class AppComponent {
         display: true,
         fontSize: 20
       }
-    }
-  };
+    }  };
 
   data = {
     values: data
@@ -79,7 +79,8 @@ export class AppComponent {
   bigNumberConfig2: IBigNumberConfig = {
     header: 'Total New Devices Count',
     footer: 'Uttar Pradesh',
-    dataExpr: 'New Devices'
+    dataExpr: 'New Devices',
+    operation: 'MIN'
   }
 
   constructor() { }

@@ -27,7 +27,6 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
   _defaultConfig: Partial<IChartOptions>;
   config: Partial<IChartOptions>;
   type: ChartType;
-  _isInitialized: boolean = false;
 
   public chartData: Partial<IChartOptions> = {};
   _labelsAndDatasetsClosure: any;

@@ -7,28 +7,30 @@
   </div>
 
   <div class="row">
-    <div class="col-sm">
-      <sb-dashlet [type]="type" [data]="data" [config]="config2" [width]="500" [height]="500"></sb-dashlet>
-    </div>
-    <div class="col-sm">
-      <sb-dashlet [type]="'bar'" [data]="data" [config]="config2" [width]="500" [height]="500"></sb-dashlet>
-    </div>
-    <div class="col-sm">
-      <sb-dashlet [type]="'pie'" [data]="data" [config]="config2" [width]="500" [height]="500"></sb-dashlet>
-    </div>
-    <div class="col-sm">
-      <sb-dashlet [type]="'doughnut'" [data]="data" [config]="config2" [width]="500" [height]="500"></sb-dashlet>
-    </div>
-    <div class="col-sm">
-      <sb-dashlet [type]="'pie'" [data]="data" [config]="config" [width]="500" [height]="500"></sb-dashlet>
-    </div>
-    <div class="col-sm">
-      <sb-dashlet [type]="'bar'" [data]="data" [config]="config2" [width]="500" [height]="500"></sb-dashlet>
+    <div class="col-sm mt-5">
+      <sb-dashlet [type]="type" [data]="data" [config]="config2"></sb-dashlet>
     </div>
     <div class="col-sm mt-5">
+      <sb-dashlet [type]="'bar'" [data]="data" [config]="config2"></sb-dashlet>
+    </div>
+    <div class="col-sm mt-5">
+      <sb-dashlet [type]="'pie'" [data]="data" [config]="config2"></sb-dashlet>
+    </div>
+    <div class="col-sm mt-5" >
+      <sb-dashlet [type]="'doughnut'" [data]="data" [config]="config2"></sb-dashlet>
+    </div>
+    <div class="col-sm mt-5">
+      <sb-dashlet [type]="'pie'" [data]="data" [config]="config"></sb-dashlet>
+    </div>
+    <div class="col-sm mt-5">
+      <sb-dashlet [type]="'bar'" [data]="data" [config]="config2"></sb-dashlet>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col mt-5">
       <sb-dashlet [type]="'bigNumber'" [data]="data" [config]="bigNumberConfig"></sb-dashlet>
     </div>
-    <div class="col-sm mt-5">
+    <div class="col mt-5">
       <sb-dashlet [type]="'bigNumber'" [data]="data" [config]="bigNumberConfig2"></sb-dashlet>
     </div>
   </div>

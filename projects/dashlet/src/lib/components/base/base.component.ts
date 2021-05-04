@@ -11,6 +11,7 @@ export abstract class BaseComponent implements Partial<IBase> {
   width: string = "100%";
   id: string;
   state: EventEmitter<ReportState> = new EventEmitter();
+  protected _isInitialized: boolean = false;
 
   abstract data: IData;
   abstract reportType: IReportType;

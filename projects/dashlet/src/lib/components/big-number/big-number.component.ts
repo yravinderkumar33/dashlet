@@ -3,7 +3,8 @@ import { DataService } from '../../services';
 import { IData, IReportType, InputParams, IBigNumberConfig, IBigNumber, ChartType, UpdateInputParams, StringObject } from '../../types';
 import { BaseComponent } from '../base/base.component';
 import { DEFAULT_CONFIG as DEFAULT_CONFIG_TOKEN, DASHLET_CONSTANTS } from '../../tokens';
-import { round, sumBy, toNumber } from 'lodash-es'
+import { round, sumBy, toNumber } from 'lodash-es';
+import { runAggregator } from './operations';
 @Component({
   selector: 'sb-big-number',
   templateUrl: './big-number.component.html',
@@ -13,7 +14,8 @@ import { round, sumBy, toNumber } from 'lodash-es'
       provide: DEFAULT_CONFIG_TOKEN,
       useValue: {
         header: '',
-        footer: ''
+        footer: '',
+        operation: 'SUM'
       }
     }
   ]
@@ -26,7 +28,6 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
   type: ChartType = ChartType.BIG_NUMBER;
   _defaultConfig: IBigNumberConfig;
 
-  private _isInitialized: boolean = false;
   chart: IBigNumberConfig = {};
 
   private _bigNumberClosure: any;
@@ -45,11 +46,11 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
   }
 
   chartBuilder(config: IBigNumberConfig, JSONData) {
-    const { header = this._defaultConfig.header, footer = this._defaultConfig.footer, dataExpr } = config;
+    const { header = this._defaultConfig.header, footer = this._defaultConfig.footer, dataExpr, operation = this._defaultConfig.operation } = config;
     if (!dataExpr || !JSONData) {
       throw Error(this.CONSTANTS.INVALID_INPUT);
     }
-    this._bigNumberClosure = this.bigNumberDataClosure(dataExpr)(JSONData);
+    this._bigNumberClosure = this.bigNumberDataClosure(dataExpr)(operation)(JSONData);
     const bigNumberObj = { header, footer, data: this._bigNumberClosure.getData() }
     this.setBigNumberData(bigNumberObj);
   }
@@ -59,12 +60,12 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
     this.cdr.detectChanges();
   }
 
-  private bigNumberDataClosure = (dataExpr: string) => (data: object[]) => {
-    const getSum = data => (round(sumBy(data, val => toNumber(val[dataExpr])))).toLocaleString('hi-IN');
+  private bigNumberDataClosure = (dataExpr: string) => $aggregateFn => (data: object[]) => {
+
     return {
       getData(overriddenData?: object[]) {
         data = overriddenData || data;
-        return getSum(data)
+        return runAggregator($aggregateFn, data, dataExpr);
       },
       addData(newData: object[]) {
         data = data.concat(newData);
@@ -85,10 +86,10 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
     if (!this._isInitialized) throw new Error('Chart is not initialized');
     if (!input) throw new Error(this.CONSTANTS.INVALID_INPUT);
     const { config = {}, data = null } = input;
-    const { header, footer, dataExpr } = config as IBigNumberConfig;
+    const { header, footer, dataExpr, operation = 'SUM' } = config as IBigNumberConfig;
     let bigNumber;
     if (data) {
-      this._bigNumberClosure = (dataExpr && this.bigNumberDataClosure(dataExpr)(data)) || this._bigNumberClosure;
+      this._bigNumberClosure = (dataExpr && this.bigNumberDataClosure(dataExpr)(operation)(data)) || this._bigNumberClosure;
       bigNumber = this._bigNumberClosure.getData(data);
     }
     this.setBigNumberData({
