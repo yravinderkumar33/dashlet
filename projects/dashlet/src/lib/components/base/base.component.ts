@@ -3,6 +3,7 @@ import { DataService } from '../../services';
 import { Observable, of } from 'rxjs';
 import { InputParams, IBase, IData, ReportState, IReportType, UpdateInputParams } from '../../types';
 import { tap } from 'rxjs/operators';
+import { constants} from '../../tokens/constants';
 export abstract class BaseComponent implements Partial<IBase> {
 
   constructor(protected dataService: DataService) { }
@@ -13,7 +14,7 @@ export abstract class BaseComponent implements Partial<IBase> {
   state: EventEmitter<ReportState> = new EventEmitter();
   protected _isInitialized: boolean = false;
 
-  abstract data: IData;
+  data = [];
   abstract reportType: IReportType;
   abstract config: object;
   abstract _defaultConfig: object;
@@ -36,5 +37,11 @@ export abstract class BaseComponent implements Partial<IBase> {
 
   getConfigValue(key: string) {
     return this.config[key];
+  }
+
+  protected checkIfInitialized(): never | void {
+    if (!this._isInitialized) {
+      throw Error(constants.CHART_NOT_INITIALIZED);
+    }
   }
 }

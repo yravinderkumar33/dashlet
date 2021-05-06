@@ -24,7 +24,7 @@ export interface IBase {
   width: string;
   id: string;
   config: object;
-  data: IData;
+  data: object[];
   state: EventEmitter<ReportState>;
   initialize(config: InputParams): void;
   reset(): void;

@@ -3,7 +3,6 @@ import { DataService } from '../../services';
 import { IData, IReportType, InputParams, IBigNumberConfig, IBigNumber, ChartType, UpdateInputParams, StringObject } from '../../types';
 import { BaseComponent } from '../base/base.component';
 import { DEFAULT_CONFIG as DEFAULT_CONFIG_TOKEN, DASHLET_CONSTANTS } from '../../tokens';
-import { round, sumBy, toNumber } from 'lodash-es';
 import { runAggregator } from './operations';
 @Component({
   selector: 'sb-big-number',
@@ -23,7 +22,6 @@ import { runAggregator } from './operations';
 export class BigNumberComponent extends BaseComponent implements IBigNumber, OnInit {
 
   config: any;
-  data: IData;
   reportType: IReportType = IReportType.CHART;
   type: ChartType = ChartType.BIG_NUMBER;
   _defaultConfig: IBigNumberConfig;
@@ -40,7 +38,7 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
   async initialize({ config, data, type = "bigNumber" }: InputParams): Promise<any> {
     if (!(config && data)) throw new SyntaxError(this.CONSTANTS.INVALID_INPUT);
     this.config = config = { ...config, type };
-    const fetchedJSON = await this.fetchData(data).toPromise().catch(err => []);
+    const fetchedJSON = this.data = await this.fetchData(data).toPromise().catch(err => []);
     this.chartBuilder(config as IBigNumberConfig, fetchedJSON);
     this._isInitialized = true;
   }
@@ -61,7 +59,6 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
   }
 
   private bigNumberDataClosure = (dataExpr: string) => $aggregateFn => (data: object[]) => {
-
     return {
       getData(overriddenData?: object[]) {
         data = overriddenData || data;
@@ -83,7 +80,7 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
   }
 
   update(input: Partial<Omit<UpdateInputParams, "type">>) {
-    if (!this._isInitialized) throw new Error('Chart is not initialized');
+    this.checkIfInitialized();
     if (!input) throw new Error(this.CONSTANTS.INVALID_INPUT);
     const { config = {}, data = null } = input;
     const { header, footer, dataExpr, operation = 'SUM' } = config as IBigNumberConfig;
@@ -118,7 +115,6 @@ export class BigNumberComponent extends BaseComponent implements IBigNumber, OnI
     throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
 }

@@ -22,7 +22,6 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
 
   @ViewChild(BaseChartDirective) baseChartDirective: BaseChartDirective;
   readonly reportType: IReportType = IReportType.CHART;
-  data: IData;
 
   _defaultConfig: Partial<IChartOptions>;
   config: Partial<IChartOptions>;
@@ -47,7 +46,7 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
   async initialize({ config, type, data }: InputParams): Promise<any> {
     if (!(config && type && data)) throw new SyntaxError(this.CONSTANTS.INVALID_INPUT);
     this.config = config = { ...config, type };
-    const fetchedJSON = await this.fetchData(data).toPromise().catch(err => []);
+    const fetchedJSON = this.data = await this.fetchData(data).toPromise().catch(err => []);
     this.chartBuilder(config, fetchedJSON);
     this._isInitialized = true;
   }
@@ -138,7 +137,7 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
    * @memberof ChartJsComponent
    */
   update(input: Partial<UpdateInputParams>) {
-    this.checkIfChartInitialized();
+    this.checkIfInitialized();
     if (!input) throw new Error(this.CONSTANTS.INVALID_INPUT);
     const { type = null, config = {}, data = null } = input;
     let labels, datasets;
@@ -154,7 +153,7 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
   }
 
   addData(data: object[] | object) {
-    this.checkIfChartInitialized();
+    this.checkIfInitialized();
     if (!data) throw new Error(this.CONSTANTS.INVALID_INPUT);
     if (this._labelsAndDatasetsClosure) {
       data = Array.isArray(data) ? data : [data];
@@ -162,13 +161,7 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
       this.setChartData({ labels, datasets });
     }
   }
-
-  private checkIfChartInitialized(): never | void {
-    if (!this._isInitialized) {
-      throw Error(this.CONSTANTS.CHART_NOT_INITIALIZED);
-    }
-  }
-
+  
   refreshChart() {
     throw new Error(this.CONSTANTS.METHOD_NOT_IMPLEMENTED);
   }
@@ -179,7 +172,7 @@ export class ChartJsComponent extends BaseComponent implements IChart, OnInit, O
    * @memberof ChartJsComponent
    */
   removeData(label: string) {
-    this.checkIfChartInitialized();
+    this.checkIfInitialized();
     const { labels, datasets } = this._labelsAndDatasetsClosure.removeData(label);
     this.setChartData({ labels, datasets });
   }
