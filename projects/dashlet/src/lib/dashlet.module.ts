@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 @NgModule({
   declarations: [ChartJsComponent, DashletComponent, ReportWrapperDirective, BigNumberComponent],
   imports: [HttpClientModule, ChartsModule, CommonModule],
-  exports: [DashletComponent]
+  exports: [DashletComponent],
+  entryComponents: [ChartJsComponent, BigNumberComponent]
 })
 export class DashletModule { }
