@@ -1,4 +1,4 @@
-import { ChartType } from '../../types';
+import { ChartType, TableType } from '../../types';
 
 const TYPE_TO_COMPONENT_MAPPING = {
   [ChartType.LINE]: () => import('../chart-js/chart-js.component').then(module => module.ChartJsComponent),
@@ -10,7 +10,8 @@ const TYPE_TO_COMPONENT_MAPPING = {
   [ChartType.POLAR]: () => import('../chart-js/chart-js.component').then(module => module.ChartJsComponent),
   [ChartType.SCATTER]: () => import('../chart-js/chart-js.component').then(module => module.ChartJsComponent),
   [ChartType.DOUGHNUT]: () => import('../chart-js/chart-js.component').then(module => module.ChartJsComponent),
-  [ChartType.BIG_NUMBER]: () => import('../big-number/big-number.component').then(module => module.BigNumberComponent)
+  [ChartType.BIG_NUMBER]: () => import('../big-number/big-number.component').then(module => module.BigNumberComponent),
+  [TableType.TABLE]: () => import('../dt-table/dt-table.component').then(module => module.DtTableComponent)
 };
 
 export default TYPE_TO_COMPONENT_MAPPING;
